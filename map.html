@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html style="height:100%;margin:0;padding:0;">
+<title>Leaflet page with tiles from localhost</title>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style type="text/css">
+.leaflet-tile-container { pointer-events: auto; }
+</style>
+</head>
+<body style="height:100%;margin:0;padding:0;">
+<div id="map" style="height:100%"></div>
+<script>
+  var api = "https://8h.dk/gis/api.php";
+  var map = L.map('map').setView([55.94, 12.43], 11);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+
+  map.createPane('isochronePane');
+  map.getPane('isochronePane').style.zIndex = 420;
+
+  map.createPane('shelterPane');
+  map.getPane('shelterPane').style.zIndex = 430;
+
+  const initialSelectedShelter = 319;
+  let selectedShelter = false;
+  let shelters = {}
+
+  const shelterConfig = {
+    
+    pointToLayer: function(feature, latlng) {
+      return L.circleMarker(latlng, {
+        pane: 'shelterPane',
+        radius: 6,
+        fillColor: "#ff3",
+        color: "#000",
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.8
+      });
+    },
+    onEachFeature: function (feature, layer) {
+
+      if (feature.properties && feature.properties.id) {
+        const id = feature.properties.id;
+        shelters[id] = { feature, layer, id }
+        if (selectedShelter == id) {
+          layer.setStyle({
+            fillColor: '#0f0',
+          });
+        }
+        layer.on('click', function(e) {
+          selectShelter(id);
+          e.stopPropagation();
+        });
+      }
+    }
+  }
+
+  const isochroneConfig = {
+    pane: 'isochronePane',
+    "style": {
+        color: "#000088",
+        weight: 1,
+        opacity: 0.5
+    },
+    onEachFeature: function (feature, layer) {
+        if (feature.properties && feature.properties.minutes) {
+          layer.bindTooltip(feature.properties.minutes+" min", {
+            sticky: true, 
+            permanent: false,   // Only show on hover
+            direction: 'top',   // You can choose 'right', 'left', etc.
+            offset: [0, -8],    // Move it a bit above the cursor/feature
+            className: 'small-tooltip' // Optional: your custom style
+          });
+        }
+    }
+  }
+
+  function selectShelter(id) {
+    id = id || false;
+    if (selectedShelter == id) return;
+
+    // deselect currently selected shelter (remove color and isochrones)
+    let shelter = selectedShelter ? shelters[selectedShelter] : null;
+    if (shelter) {
+      shelter.layer.setStyle({
+        fillColor: "#ff3",
+      })
+      if (layerIsochrone) layerIsochrone.remove();
+      layerIsochrone = null;
+    }
+
+    selectedShelter = false;
+    
+    // select shelter (change color and load isochrones)
+    shelter = id ? shelters[id] : null;
+    if (shelter) {
+      selectedShelter = id;
+      shelter.layer.setStyle({
+          fillColor: '#0f0',
+      });
+      loadIsochrones(id)
+    }
+  }
+
+  updateShelters()
+  .then( () => {
+    selectShelter(initialSelectedShelter);  
+  })
+  
+  map.on('moveend', updateShelters);
+
+  map.on('click', function(e) {
+    selectShelter();
+  });
+
+  let layerShelter = null;
+  function updateShelters() {
+    return fetch(api+'?cmd=map&xmin=' + map.getBounds().getWest()
+       + '&ymin=' + map.getBounds().getSouth()
+       + '&xmax=' + map.getBounds().getEast()
+       + '&ymax=' + map.getBounds().getNorth())
+    .then(res => res.json())
+    .then((data) =>{
+        shelters = {}
+        if (layerShelter) layerShelter.remove();
+        layerShelter = L.geoJSON(data, shelterConfig).addTo(map)  
+    } );
+  }
+
+  let layerIsochrone = null;
+  function loadIsochrones(shelter_id) {
+    fetch(api+'?cmd=isochrone&shelter=' + shelter_id)
+    .then(res => res.json())
+    .then((data) =>{
+        if (layerIsochrone) layerIsochrone.remove();
+        layerIsochrone = L.geoJSON(data, isochroneConfig).addTo(map)  
+    } );    
+  }
+
+</script>
+</body>
+</html>
