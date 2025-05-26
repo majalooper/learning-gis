@@ -1,7 +1,12 @@
 # Learning GIS and PostGIS
 
+
+This project visualizes Danish shelters and their accessibility on an interactive map. Select a shelter to display isochrone zones showing up to 15 minutes of travel time. The map uses OpenStreetMap data and Leaflet, with all routing and analysis computed using PostGIS and pgRouting.
+
 This is a personal project for learning GIS and PostGIS.
 
+
+![Map Screenshot](img/demo.jpg)
 
 ## What's needed
 
