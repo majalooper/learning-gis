@@ -51,11 +51,3 @@ Use `api.php` (see code) to serve GeoJSON layers to the map.
 6. **View results**  
 Open `map.html` to see shelters and their isochrone polygons (by drive time).
 
----
-
-## Included
-
-- Data folder: sample shelter data (`shelters.gpkg`)
-- SQL folder: my scripts, step by step
-- `map.html` and `api.php`: for the simple web demo
-
