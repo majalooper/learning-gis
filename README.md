@@ -8,10 +8,13 @@ This is a personal project for learning GIS and PostGIS.
 - PostgreSQL with PostGIS and pgRouting  
   (Easiest: use the `kartoza/postgis` Docker image)
 - A road shapefile for Denmark (OSM)
-- Shelter data (included as `shelters.gpkg`)
+- Shelter data (included as `data/shelters.gpkg`)
 - Enough RAM & disk (increase Docker shared memory to 1GB: `--shm-size=1g`)
 
-> **Note:** The shelter data is retrieved from udinaturen.dk and processed using PyQGIS.
+## Data sources
+
+- Open Street Map shapefiles for Denmark can be downloaded from [geofabrik.de](https://download.geofabrik.de/europe.html)
+- Shelters can be retrieved from udinaturen.dk by QGIS using `data/udinaturen_shelters.py`
 
 ## Reproduce the process
 
